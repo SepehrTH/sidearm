@@ -1,0 +1,24 @@
+[
+  {
+    "name": "commix",
+    "type": "git",
+    "repo": "https://github.com/commixproject/commix.git",
+    "exec": "commix.py"
+  },
+  {
+    "name": "sqlmap",
+    "type": "git",
+    "repo": "https://github.com/sqlmapproject/sqlmap.git",
+    "exec": "sqlmap.py"
+  },
+  {
+    "name": "ffuf",
+    "type": "go",
+    "repo": "github.com/ffuf/ffuf/v2"
+  },
+  {
+    "name": "gobuster",
+    "type": "go",
+    "repo": "github.com/OJ/gobuster/v3"
+  }
+]
