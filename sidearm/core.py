@@ -77,6 +77,23 @@ def write_json(data, path):
     # Replace old file atomically
     shutil.move(temp_name, path)
 
+
+def add_symlink(exec_dest, name):
+    TOOLS_DIR, BIN_DIR = get_dirs()
+    os.makedirs(BIN_DIR, exist_ok=True)
+
+    symlink_dest = os.path.join(BIN_DIR, name)
+
+    if not os.path.exists(exec_dest):
+        print(f"[!] Executable {exec_dest} does not exist, skipping symlink")
+    else:
+        if os.path.exists(symlink_dest):
+            os.remove(symlink_dest)
+
+        print(f"[+] Adding symlink to {symlink_dest}")
+        os.symlink(exec_dest, symlink_dest)
+
+
 def install_or_update(name):
     TOOLS_DIR, BIN_DIR = get_dirs()
 
@@ -105,22 +122,12 @@ def install_or_update(name):
                 subprocess.run(f"git clone --depth 1 {repo} {dest}", shell=True, check=True)
             except subprocess.CalledProcessError as e:
                 print(f"[!] Failed to clone {name}: {e}")
-                
-        os.makedirs(BIN_DIR, exist_ok=True)
 
-        exec_dest = os.path.join(dest, tool['exec'])
+        if tool['exec'] != '':
+            exec_dest = os.path.join(dest, tool['exec'])
+            add_symlink(exec_dest, tool['name'])
 
-        symlink_dest = os.path.join(BIN_DIR, tool['name'])
-
-        if not os.path.exists(exec_dest):
-            print(f"[!] Executable {exec_dest} does not exist, skipping symlink")
-        else:
-            if os.path.exists(symlink_dest):
-                os.remove(symlink_dest)
-
-            print(f"[+] Adding symlink to {symlink_dest}")
-            os.symlink(exec_dest, symlink_dest)
-
+        
     elif tool['type'] == 'go':
         # Addin @latest to the end of repo if there is no version.
         if '@' not in repo:
@@ -145,7 +152,7 @@ def add():
     
     name = input("Enter the name of the repo: ")
     
-    exec_path = input("Enter the relative path of the executable file from the repo: (ex: a.py) ") if ty=='git' else ''
+    exec_path = input("Enter the relative path of the executable file from the repo: (ex: a.py or empty for non exec) ").strip() if ty=='git' else ''
 
     new_tool = {
         "name": name,
