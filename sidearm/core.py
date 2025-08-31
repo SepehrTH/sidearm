@@ -102,7 +102,7 @@ def install_or_update(name):
         else:
             print(f"[+] Installing {name}")
             try:
-                subprocess.run(f"git clone {repo} {dest}", shell=True, check=True)
+                subprocess.run(f"git clone --depth 1 {repo} {dest}", shell=True, check=True)
             except subprocess.CalledProcessError as e:
                 print(f"[!] Failed to clone {name}: {e}")
                 
