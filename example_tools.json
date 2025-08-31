@@ -20,5 +20,11 @@
     "name": "gobuster",
     "type": "go",
     "repo": "github.com/OJ/gobuster/v3"
+  },
+  {
+    "name": "sidearm",
+    "type": "git",
+    "repo": "https://github.com/SepehrTH/sidearm.git",
+    "exec": "sidearm.py"
   }
 ]

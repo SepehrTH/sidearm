@@ -5,13 +5,28 @@ import shutil
 
 CONFIG_DIR = os.path.expanduser("~/.sidearm")
 CONFIG_FILE = os.path.join(CONFIG_DIR, "config.json")
+TOOLS_FILE = os.path.join(CONFIG_DIR, "tools.json")
 
+sidearm = [{
+                "name": "sidearm",
+                "type": "git",
+                "repo": "https://github.com/SepehrTH/sidearm.git",
+                "exec": "sidearm.py"
+            }]
 
 
 def init():
+    
     if os.path.exists(CONFIG_DIR):
         ans = input(f"[!] Config directory already exists at {CONFIG_FILE}. Overwrite? (y/[N]) ").strip()
+        # If config exist, just check for anything missings
         if ans.lower() != 'y':
+            tools_path, bin_path = get_dirs()
+            os.makedirs(tools_path, exist_ok=True)
+            os.makedirs(bin_path, exist_ok=True)
+            if not os.path.exists(TOOLS_FILE):
+                write_json(sidearm, TOOLS_FILE)
+            install_or_update('sidearm')
             print("[*] Keeping existing configuration.")
             return
 
@@ -27,15 +42,13 @@ def init():
     os.makedirs(tools_dir, exist_ok=True)
     os.makedirs(bin_dir, exist_ok=True)
 
-    tools_config = os.path.join(tools_dir, "tools.json")
-    if not os.path.exists(tools_config):
-        with open(tools_config, "w") as f:
-            json.dump([], f, indent=2)
+    if not os.path.exists(TOOLS_FILE):
+        write_json(sidearm, TOOLS_FILE)
 
     config = {"tools_dir": tools_dir, "bin_dir": bin_dir}
+    write_json(config, CONFIG_FILE)
 
-    with open(CONFIG_FILE, 'w') as f:
-        json.dump(config, f, indent=4)
+    install_or_update('sidearm')
 
     print(f"[+] Sidearm initialized. Tools will be installed in {tools_dir}.")
     print(f"You can edit the {tools_dir}/tools.json and then run ]\"sidearm sync\" if you have a ready config file.")
@@ -51,7 +64,7 @@ def get_dirs():
     config = load_config()
     return config["tools_dir"], config["bin_dir"]
 
-def atomic_write_json(data, path):
+def write_json(data, path):
     """
     Safely write JSON data to a file. 
     Ensures we never leave a half-written tools.json if interrupted.
@@ -66,8 +79,8 @@ def atomic_write_json(data, path):
 
 def install_or_update(name):
     TOOLS_DIR, BIN_DIR = get_dirs()
-    tools_file = os.path.join(TOOLS_DIR, "tools.json")
-    with open(tools_file) as f:
+
+    with open(TOOLS_FILE) as f:
         tools = json.load(f)
 
     tool = next((t for t in tools if t["name"] == name), None)
@@ -123,7 +136,6 @@ def install_or_update(name):
 
 def add():
     TOOLS_DIR, BIN_DIR = get_dirs()
-    tools_config = os.path.join(TOOLS_DIR, "tools.json")
 
     ty = ''
     while ty not in ['git', 'go']:
@@ -142,12 +154,11 @@ def add():
         "exec": exec_path
     }
 
-    with open(tools_config, "r") as f:
+    # Adding the tool to tools.json
+    with open(TOOLS_FILE, "r") as f:
         tools = json.load(f)
-
     tools.append(new_tool)
-    
-    atomic_write_json(tools, tools_config)
+    write_json(tools, TOOLS_FILE)
 
     install_or_update(name)
 
@@ -174,8 +185,7 @@ def validate_tool(tool):
 
 def sync():
     TOOLS_DIR, BIN_DIR = get_dirs()
-    tools_config = os.path.join(TOOLS_DIR, "tools.json")
-    with open(tools_config) as f:
+    with open(TOOLS_FILE) as f:
         tools = json.load(f)
 
     for tool in tools:
