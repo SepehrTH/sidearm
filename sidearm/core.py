@@ -183,10 +183,6 @@ def validate_tool(tool):
     if tool["type"] not in ["git", "go"]:
         return False, f"Invalid type '{tool['type']}', must be 'git' or 'go'"
 
-    if tool["type"] == "git":
-        if "exec" not in tool or not isinstance(tool["exec"], str) or not tool["exec"].strip():
-            return False, "Git tool must specify non-empty 'exec' field"
-
     return True, None
 
 
